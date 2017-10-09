@@ -1,6 +1,7 @@
 
 var noble = require('../..');
 var pizza = require('./pizza');
+var gpio = require('rpi-gpio');
 
 var pizzaServiceUuid = '13333333333333333333333333333337';
 var pizzaCrustCharacteristicUuid = '13333333333333333333333333330001';
@@ -26,74 +27,77 @@ var pizzaService = null;
 var pizzaCrustCharacteristic = null;
 var pizzaToppingsCharacteristic = null;
 var pizzaBakeCharacteristic = null;
-
-noble.on('discover', function(peripheral) {
-  // we found a peripheral, stop scanning
-  noble.stopScanning();
-
-  //
-  // The advertisment data contains a name, power level (if available),
-  // certain advertised service uuids, as well as manufacturer data,
-  // which could be formatted as an iBeacon.
-  //
-  console.log('found peripheral:', peripheral.advertisement);
-  //
-  // Once the peripheral has been discovered, then connect to it.
-  //
-  peripheral.connect(function(err) {
+gpio.on('change', function(channel, value) {
+  console.log('Channel ' + channel + ' value is now ' + value);
+  noble.on('discover', function(peripheral) {
+    // we found a peripheral, stop scanning
+    noble.stopScanning();
+  
     //
-    // Once the peripheral has been connected, then discover the
-    // services and characteristics of interest.
+    // The advertisment data contains a name, power level (if available),
+    // certain advertised service uuids, as well as manufacturer data,
+    // which could be formatted as an iBeacon.
     //
-    peripheral.discoverServices([pizzaServiceUuid], function(err, services) {
-      services.forEach(function(service) {
-        //
-        // This must be the service we were looking for.
-        //
-        console.log('found service:', service.uuid);
+    console.log('found peripheral:', peripheral.advertisement);
+    //
+    // Once the peripheral has been discovered, then connect to it.
+    //
+    peripheral.connect(function(err) {
+      //
+      // Once the peripheral has been connected, then discover the
+      // services and characteristics of interest.
+      //
+      peripheral.discoverServices([pizzaServiceUuid], function(err, services) {
+        services.forEach(function(service) {
+          //
+          // This must be the service we were looking for.
+          //
+          console.log('found service:', service.uuid);
 
-        //
-        // So, discover its characteristics.
-        //
-        service.discoverCharacteristics([], function(err, characteristics) {
+          //
+          // So, discover its characteristics.
+          //
+          service.discoverCharacteristics([], function(err, characteristics) {
+  
+            characteristics.forEach(function(characteristic) {
+              //
+              // Loop through each characteristic and match them to the
+              // UUIDs that we know about.
+              //
+              console.log('found characteristic:', characteristic.uuid);
 
-          characteristics.forEach(function(characteristic) {
+              if (pizzaCrustCharacteristicUuid == characteristic.uuid) {
+                pizzaCrustCharacteristic = characteristic;
+              }
+              else if (pizzaToppingsCharacteristicUuid == characteristic.uuid) {
+                pizzaToppingsCharacteristic = characteristic;
+              }
+              else if (pizzaBakeCharacteristicUuid == characteristic.uuid) {
+                pizzaBakeCharacteristic = characteristic;
+              }
+            })
+
             //
-            // Loop through each characteristic and match them to the
-            // UUIDs that we know about.
+            // Check to see if we found all of our characteristics.
             //
-            console.log('found characteristic:', characteristic.uuid);
-
-            if (pizzaCrustCharacteristicUuid == characteristic.uuid) {
-              pizzaCrustCharacteristic = characteristic;
+            if (pizzaCrustCharacteristic &&
+                pizzaToppingsCharacteristic &&
+                pizzaBakeCharacteristic) {
+              //
+              // We did, so bake a pizza!
+              //
             }
-            else if (pizzaToppingsCharacteristicUuid == characteristic.uuid) {
-              pizzaToppingsCharacteristic = characteristic;
-            }
-            else if (pizzaBakeCharacteristicUuid == characteristic.uuid) {
-              pizzaBakeCharacteristic = characteristic;
+            else {
+              console.log('missing characteristics');
             }
           })
-
-          //
-          // Check to see if we found all of our characteristics.
-          //
-          if (pizzaCrustCharacteristic &&
-              pizzaToppingsCharacteristic &&
-              pizzaBakeCharacteristic) {
-            //
-            // We did, so bake a pizza!
-            //
-            bakePizza();
-          }
-          else {
-            console.log('missing characteristics');
-          }
         })
       })
     })
   })
-})
+});
+
+gpio.setup(7, gpio.DIR_IN, gpio.EDGE_BOTH);
 
 function bakePizza() {
   //
