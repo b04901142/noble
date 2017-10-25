@@ -115,7 +115,11 @@ function bakePizza() {
       );
       pizzaToppingsCharacteristic.write(toppings, false, function(err) {
         if (!err) {
-          //
+          pizzaToppingsCharacteristic.on('read', function(data, isNotification) {
+            console.log('Our x is ready!');
+            var result = data.readUInt8(0);
+            console.log('The result is',result);
+          });
           // Subscribe to the bake notification, so we know when
           // our pizza will be ready.
           //
