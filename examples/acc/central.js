@@ -1,11 +1,10 @@
 
 var noble = require('../..');
-var pizza = require('./acc');
 
 var ServiceUuid = '13333333333333333333333333333337';
 var AccXCharacteristicUuid = '1333333333333333333333330001';
-var AccYCharacteristicUuid = '13333333333333333333333333330002';
-var AccZCharacteristicUuid = '13333333333333333333333333330003';
+//var AccYCharacteristicUuid = '13333333333333333333333333330002';
+//var AccZCharacteristicUuid = '13333333333333333333333333330003';
 
 noble.on('stateChange', function(state) {
   if (state === 'poweredOn') {
@@ -24,8 +23,8 @@ noble.on('stateChange', function(state) {
 
 var Service = null;
 var AccXCharacteristic = null;
-var AccYCharacteristic = null;
-var AccZCharacteristic = null;
+//var AccYCharacteristic = null;
+//var AccZCharacteristic = null;
 
 noble.on('discover', function(peripheral) {
   // we found a peripheral, stop scanning
@@ -67,20 +66,18 @@ noble.on('discover', function(peripheral) {
             if (AccXCharacteristicUuid == characteristic.uuid) {
               AccXCharacteristic = characteristic;
             }
-            else if (AccYCharacteristicUuid == characteristic.uuid) {
-              AccYCharacteristic = characteristic;
-            }
-            else if (AccZCharacteristicUuid == characteristic.uuid) {
-              AccZCharacteristic = characteristic;
-            }
+            //else if (AccYCharacteristicUuid == characteristic.uuid) {
+            //  AccYCharacteristic = characteristic;
+            //}
+            //else if (AccZCharacteristicUuid == characteristic.uuid) {
+            //  AccZCharacteristic = characteristic;
+            //}
           })
 
           //
           // Check to see if we found all of our characteristics.
           //
-          if (AccXCharacteristic &&
-              AccYCharacteristic &&
-              AccZCharacteristic) {
+          if (AccXCharacteristic) {
             //
             // We did, so bake a pizza!
             //
@@ -101,13 +98,12 @@ function getData() {
 	console.log('prepare for x_reading');
  	AccXCharacteristic.on('read', function(data, isNotification) {
   	console.log('Our x is ready!');
-    var result = data.readUInt8(0);
-    console.log('The result is',result);
+    console.log('The result is',result[0],' ',result[1],' ',result[2]);
   });
 
 	AccXCharacteristic.subscribe(function(err) {
 		console.log('subx check');
-		var temperature = new Buffer(2);
+		var temperature = new Buffer(3);
 		temperature.writeUInt16BE(450, 0);
 		AccXCharacteristic.write(temperature, false, function(err) {
 			if (err) {
@@ -116,42 +112,4 @@ function getData() {
     });
   });
 
-	console.log('prepare for y_reading');
- 	AccYCharacteristic.on('read', function(data, isNotification) {
-  	console.log('Our y is ready!');
-    var result = data.readUInt8(0);
-    console.log('The result is',result);
-  });
-
-	AccYCharacteristic.subscribe(function(err) {
-		console.log('suby check');
-		var temperature = new Buffer(2);
-		temperature.writeUInt16BE(450, 0);
-		AccYCharacteristic.write(temperature, false, function(err) {
-			if (err) {
-				console.log('yyy error');
-			}
-    });
-  });
-
-	console.log('prepare for z_reading');
- 	AccZCharacteristic.on('read', function(data, isNotification) {
-  	console.log('Our z is ready!');
-    var result = data.readUInt8(0);
-    console.log('The result is',result);
-  });
-
-	AccZCharacteristic.subscribe(function(err) {
-		console.log('subz check');
-		var temperature = new Buffer(2);
-		temperature.writeUInt16BE(450, 0);
-		AccZCharacteristic.write(temperature, false, function(err) {
-			if (err) {
-				console.log('zzz error');
-			}
-    });
-  });
-          
-        
-  
 }
