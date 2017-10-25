@@ -114,12 +114,30 @@ function bakePizza() {
         0
       );
       pizzaToppingsCharacteristic.write(toppings, false, function(err) {
-        if (!err) {
+        if (!err) {console.log('prepare for r4eading');
           pizzaToppingsCharacteristic.on('read', function(data, isNotification) {
             console.log('Our x is ready!');
             var result = data.readUInt8(0);
             console.log('The result is',result);
           });
+
+	pizzaToppingsCharacteristic.subscribe(function(err) {console.log('sub check');
+
+
+
+            var temperature = new Buffer(2);
+            temperature.writeUInt16BE(450, 0);
+
+
+            pizzaToppingsCharacteristic.write(temperature, false, function(err) {
+              if (err) {
+
+
+                console.log('xxx error');
+              }
+            });
+          });
+
           // Subscribe to the bake notification, so we know when
           // our pizza will be ready.
           //
